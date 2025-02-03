@@ -18,7 +18,13 @@ class Category(UUIDModel):
         return self.name if not self.parent else f"{self.parent} --> {self.name}"
 
 
+class Size(UUIDModel):
+    name = models.CharField(max_length=50)
 
+    def __str__(self):
+        return self.name
+
+ 
 class Product(UUIDModel):
     name = models.CharField(max_length=255)
     description = models.TextField()
@@ -26,6 +32,7 @@ class Product(UUIDModel):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.IntegerField()
     bestSeller=models.BooleanField(default=False)
+    size = models.ManyToManyField(Size,related_name="products")  # Many-to-Many since a product can have multiple sizes
 
     def __str__(self):
         return self.name
@@ -41,12 +48,7 @@ class ProductImage(UUIDModel):
 
 
 
-class Size(UUIDModel):
-    name = models.CharField(max_length=50)
-    products = models.ManyToManyField(Product)  # Many-to-Many since a product can have multiple sizes
 
-    def __str__(self):
-        return self.name
 
 
 
