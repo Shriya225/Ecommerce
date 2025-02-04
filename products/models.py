@@ -5,6 +5,7 @@ class UUIDModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)  # Set on creation
     updated_at = models.DateTimeField(auto_now=True)  # Set on update
+
     class Meta:
         abstract = True  # Make this an abstract base class
 
@@ -42,6 +43,7 @@ class Product(UUIDModel):
 class ProductImage(UUIDModel):
     product=models.ForeignKey(Product,on_delete=models.CASCADE, related_name="product_images")
     image_url = models.ImageField(upload_to="product_images/")
+    is_main=models.BooleanField(default=False)
 
     def __str__(self):
         return f" Image for {self.product.name}"
