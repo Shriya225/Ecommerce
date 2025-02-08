@@ -5,7 +5,7 @@ from .models import CartItem
 from products.models import Size
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from .serializers import CartSerializer,CartItemSerializer
+from .serializers import CartSerializer,CartItemSerializer,AddToCartSerializer
 
 
 class ViewCart(APIView):
@@ -28,19 +28,10 @@ class AddCart(APIView):
 
     def post(self,request):
         print(request.data,type(request.data))  
-        data=request.data.copy()
-        print(request.user.cart_id,type(request.user.cart_id))
-        data["cart_id"]=request.user.cart_id
-        size_str=data.get("size")
-        size_obj=Size.objects.filter(name=size_str).first()
-        if size_str and not size_obj:
-            return Response({"msg": "Invalid size selected."}, status=400)
-        if size_obj:
-            data["size"] = size_obj
-        serializer=CartItemSerializer(data=data)
+        serializer=AddToCartSerializer(data=request.data,context={"request": request})
         if serializer.is_valid():
             serializer.save()
-            return Response({"masg":serializer.data})
-        return Response({"masg":serializer.errors})
+            return Response({"msg":serializer.data})
+        return Response({"msg":serializer.errors})
 
 

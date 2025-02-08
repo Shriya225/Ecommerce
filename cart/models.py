@@ -19,4 +19,6 @@ class CartItem(UUIDModel):
    
 
     def __str__(self):
-        return f"{self.quantity} x {self.product.name} in {self.cart_id.user.username}'s cart"
+        return f"{self.quantity} x {self.product.name} in {self.cart_id.user.username}'s cart of size {self.size}"
+
+

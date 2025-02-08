@@ -34,6 +34,38 @@ class CartItemSerializer(serializers.ModelSerializer):
 
 
 
+class AddToCartSerializer(serializers.ModelSerializer):
+    product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())  # Accepts Product ID
+    size = serializers.CharField()  # Accepts size as string
+
+    class Meta:
+        model = CartItem
+        fields = ["quantity", "product", "size"]
+    
+    
+    def validate_size(self, value):
+        """Validate size exists in the database."""
+        size_obj = Size.objects.filter(name=value).first()
+        if not size_obj:
+            raise serializers.ValidationError("Invalid size selected.")
+        return size_obj  # Return the Size object instead of a string  
+
+    def create(self, validated_data):
+        user = self.context["request"].user  # Get user from request
+        validated_data["cart_id"] = user.cart_id
+        print(user.cart_id)  # Assign cart_id automatically
+
+        existing_obj=CartItem.objects.filter(cart_id= user.cart_id,product=validated_data["product"],size=validated_data["size"]).first()
+        if existing_obj:
+            if validated_data.get("quantity"):
+                existing_obj.quantity+= validated_data["quantity"]
+            else:
+                existing_obj.quantity+= 1
+            existing_obj.save()
+            return existing_obj  # Return updated item
+        return CartItem.objects.create(**validated_data)
+
+
 
 
 
