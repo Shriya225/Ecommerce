@@ -40,7 +40,7 @@ class AddToCartSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CartItem
-        fields = ["quantity", "product", "size"]
+        fields = ["id","quantity", "product", "size"]
     
     
     def validate_size(self, value):
@@ -55,6 +55,7 @@ class AddToCartSerializer(serializers.ModelSerializer):
         validated_data["cart_id"] = user.cart_id
         print(user.cart_id)  # Assign cart_id automatically
 
+        # to avoid duplicates of cart items.
         existing_obj=CartItem.objects.filter(cart_id= user.cart_id,product=validated_data["product"],size=validated_data["size"]).first()
         if existing_obj:
             if validated_data.get("quantity"):
@@ -64,6 +65,24 @@ class AddToCartSerializer(serializers.ModelSerializer):
             existing_obj.save()
             return existing_obj  # Return updated item
         return CartItem.objects.create(**validated_data)
+    
+    def update(self, instance, validated_data):
+        print(instance,type(instance),instance.quantity)
+        print(validated_data,type(validated_data))
+        updated_quantity=validated_data.get("quantity")
+        if not updated_quantity:
+            raise serializers.ValidationError("Quantity field is empty..")
+        if updated_quantity>=1:
+            instance.quantity=validated_data["quantity"]
+        else:
+            raise serializers.ValidationError("Quantity must be >= 1")
+        instance.save()
+        return  instance
+
+    
+
+
+
 
 
 

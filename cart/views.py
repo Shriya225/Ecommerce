@@ -33,5 +33,41 @@ class AddCart(APIView):
             serializer.save()
             return Response({"msg":serializer.data})
         return Response({"msg":serializer.errors})
+    
+class UpdateCartView(APIView):
+    permission_classes=[IsAuthenticated]
+    authentication_classes=[JWTAuthentication]
+
+    def patch(self,request):
+        data=request.data
+        cart_item_obj=CartItem.objects.get(id=request.data["id"])
+        serializer=AddToCartSerializer(cart_item_obj,data=request.data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors)
+
+class DeleteCartItemView(APIView):
+    def delete(self, request):
+        try:
+            data = request.data
+            cart_item_id = data.get("id")  # Use `.get()` to avoid KeyError
+            
+            if not cart_item_id:
+                return Response({"error": "ID is required"}, status=400)
+
+            obj = CartItem.objects.get(id=cart_item_id)  # Fetch item
+            
+            obj.delete()
+            return Response({"msg": "Successfully deleted"}, status=200)
+
+        except CartItem.DoesNotExist:
+            return Response({"error": "Cart item not found"}, status=404)
+
+        except KeyError:
+            return Response({"error": "Invalid request format"}, status=400)
+
+        except Exception as e:  # Handle unexpected errors
+            return Response({"error": f"An error occurred: {str(e)}"}, status=500)
 
 
