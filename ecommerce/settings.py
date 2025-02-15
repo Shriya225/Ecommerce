@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'user_management',
     'cart',
     'order_management',
+    'admin_pannel'
 ]
 
 MIDDLEWARE = [
