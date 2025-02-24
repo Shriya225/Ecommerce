@@ -41,5 +41,19 @@ class OrderItem(UUIDModel):
 
     def __str__(self):
         return f"{self.quantity} x {self.product.name} in Order {self.order.id}"
+    
+
+class DeliveryInfo(UUIDModel):
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name="delivery_info")
+    first_name = models.CharField(max_length=255)
+    last_name = models.CharField(max_length=255)
+    email_address=models.EmailField()
+    phone_number = models.CharField(max_length=20)
+    street = models.TextField()
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    postal_code = models.CharField(max_length=20)
+    country = models.CharField(max_length=100)
+
    
 

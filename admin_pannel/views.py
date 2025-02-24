@@ -6,6 +6,8 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 import uuid
+from order_management.models import Order,OrderItem
+from .serializers import ListOrderSerializer
 
 # Create your views here.
 
@@ -56,3 +58,9 @@ class DeleteProductView(APIView):
     
 
 
+
+class ListOrderView(APIView):
+    def get(self,request):
+        orders=Order.objects.all()
+        serializer=ListOrderSerializer(orders,many=True)    
+        return Response({"msg":"orders...","data":serializer.data})

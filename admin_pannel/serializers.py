@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from products.models import Product,Category,Size,ProductImage,Category
-
+from order_management.models import Order,OrderItem,DeliveryInfo
 
 # serializer to add images for storing products.
 class ProductImageSerializer(serializers.ModelSerializer):
@@ -59,3 +59,20 @@ class ListProductSerializer(serializers.ModelSerializer):
         main_img=obj.product_images.filter(is_main=True).first()
         return main_img.image_url.url if main_img else None
     
+class DeliveryInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=DeliveryInfo
+        fields=["first_name","city","country","state","postal_code"]
+
+# serializer to dispaly all orders
+class ListOrderSerializer(serializers.ModelSerializer):
+    items=serializers.SerializerMethodField()
+    delivery_info=DeliveryInfoSerializer()
+    class Meta:
+        model=Order
+        fields=["id","created_at","total_price","payment_method","status","delivery_info","items"]
+
+    def get_items(self,obj):
+        items_data=obj.items.all()
+        print(items_data)
+        return  [str(item) for item in items_data]  # Calls __str__ method of Product model
