@@ -1,6 +1,11 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import ProductAddSerializer
+from .serializers import ProductAddSerializer,ListProductSerializer
+from products.models import Product
+from rest_framework import status
+from django.shortcuts import get_object_or_404
+from django.db import transaction
+import uuid
 
 # Create your views here.
 
@@ -15,3 +20,39 @@ class AddProductView(APIView):
         else:
             print(serializer.errors)
         return Response({"errors":serializer.errors,"data":serializer.data})
+
+class ListProductView(APIView):
+    def get(self,request):
+        products=Product.objects.all()
+        serializer=ListProductSerializer(products)
+        return Response(serializer.data)
+    
+
+class DeleteProductView(APIView):
+    def delete(self, request):
+        product_id = request.data.get("id") 
+
+        if not product_id:
+            return Response({"msg": "Send a valid product ID"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Ensure product_id is a valid UUID
+            product_uuid = uuid.UUID(product_id)
+        except ValueError:
+            return Response({"msg": "Invalid UUID format"}, status=status.HTTP_400_BAD_REQUEST)
+
+        product = get_object_or_404(Product, id=product_uuid) 
+
+        try:
+            with transaction.atomic():  # Ensures safe rollback if an error occurs
+                product.delete()
+            return Response({"msg": "Product deleted successfully"}, status=status.HTTP_200_OK)
+
+        except Exception as e: 
+            return Response(
+                {"msg": "Something went wrong while deleting the product", "error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+
+

@@ -1,6 +1,8 @@
 from rest_framework import serializers
-from products.models import Product,Category,Size,ProductImage
+from products.models import Product,Category,Size,ProductImage,Category
 
+
+# serializer to add images for storing products.
 class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
         model=ProductImage
@@ -28,4 +30,32 @@ class ProductAddSerializer(serializers.ModelSerializer):
         ])
         return product
 
+# # serilaizer for returning only parent name of cateogry.
+# class parentSerializer(serializers.ModelSerializer):
+#         class Meta:
+#             model=Category
+#             fields=["name",]
 
+# serializer for category listproduct
+class CateogryProductSerializer(serializers.ModelSerializer):
+    parent = serializers.CharField(source="parent.name", allow_null=True)
+    class Meta:
+        model=Category
+        fields=["parent",]
+
+
+  
+# serializer to display all products in admin pannel
+class ListProductSerializer(serializers.ModelSerializer):
+    main_img=serializers.SerializerMethodField()
+    cateogry= serializers.CharField(source="parent.name", allow_null=True)
+    class Meta:
+        model=Product
+        fields=["id","main_img","name","price","cateogry"]
+
+
+    def get_main_img(self,obj):
+        print(obj)
+        main_img=obj.product_images.filter(is_main=True).first()
+        return main_img.image_url.url if main_img else None
+    
