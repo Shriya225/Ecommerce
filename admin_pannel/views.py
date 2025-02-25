@@ -63,4 +63,25 @@ class ListOrderView(APIView):
     def get(self,request):
         orders=Order.objects.all()
         serializer=ListOrderSerializer(orders,many=True)    
-        return Response({"msg":"orders...","data":serializer.data})
+        return Response(serializer.data)
+    
+
+class UpdateOrderStatusView(APIView):
+    def patch(self, request):
+            id = request.data.get("id")
+            status_value = request.data.get("status")
+
+            if not id or not status_value:
+                return Response({"msg": "ID and status are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                obj = Order.objects.filter(id=id).first()
+                if obj is None:
+                    return Response({"msg": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
+
+                obj.status = status_value
+                obj.save()  # Save the updated status
+
+                return Response({"msg": "Order status updated successfully"}, status=status.HTTP_200_OK)
+            except Exception as e:
+                return Response({"msg": f"Error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

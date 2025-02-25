@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import AddProductView,ListProductView,DeleteProductView,ListOrderView
+from .views import AddProductView,ListProductView,DeleteProductView,ListOrderView,UpdateOrderStatusView
 
 
 urlpatterns = [
@@ -7,4 +7,5 @@ urlpatterns = [
     path('List/',ListProductView.as_view()),
     path('Delete/',DeleteProductView.as_view()),
     path('ViewOrders/',ListOrderView.as_view()),
+    path('updateStatus/',UpdateOrderStatusView.as_view())
     ]
