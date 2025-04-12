@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     'user_management',
     'cart',
     'order_management',
-    'admin_pannel'
+    'admin_pannel',
+     'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -57,8 +58,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+        'corsheaders.middleware.CorsMiddleware',
 ]
-
+CORS_ALLOW_ALL_ORIGINS = True
 ROOT_URLCONF = 'ecommerce.urls'
 
 TEMPLATES = [

@@ -18,7 +18,7 @@ class RegisterUserView(APIView):
             if serializer.is_valid():
                 serializer.save()
                 return Response({"data":serializer.data,"msg":"succesfully created user."})
-            return Response({"errors":serializer.errors,"msg":"cannot create user."})
+            return Response({"errors":serializer.errors,"msg":"cannot create user."},status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             raise serializers.ValidationError({"msg":str(e)})
 

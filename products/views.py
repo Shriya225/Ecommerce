@@ -3,7 +3,6 @@ from .models import Product
 from .serializers import ProductCollectionSerializer,ProductDetailSerializer
 from rest_framework.response import Response
 
-
 class ProductView(ReadOnlyModelViewSet):
     queryset=Product.objects.prefetch_related("product_images").all()
     
@@ -21,8 +20,8 @@ class HomeView(ReadOnlyModelViewSet):
         return ProductDetailSerializer
 
     def list(self, request, *args, **kwargs):
-        latest_products = Product.objects.order_by('-created_at')[:2]
-        best_sellers = Product.objects.filter(bestSeller=True)[:1]
+        latest_products = Product.objects.order_by('-created_at')[:8]
+        best_sellers = Product.objects.filter(bestSeller=True)
 
         latest_products_data=ProductCollectionSerializer(latest_products,many=True).data
         best_sellers_data=ProductCollectionSerializer(best_sellers,many=True).data
