@@ -19,7 +19,7 @@ class ProductCollectionSerializer(serializers.ModelSerializer):
 class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
         model=ProductImage
-        fields=["id","image_url"]
+        fields=["id","image_url","is_main"]
 
 
 class ProductDetailSerializer(serializers.ModelSerializer):
