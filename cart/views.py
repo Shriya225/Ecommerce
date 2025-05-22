@@ -48,6 +48,8 @@ class UpdateCartView(APIView):
         return Response(serializer.errors)
 
 class DeleteCartItemView(APIView):
+    permission_classes=[IsAuthenticated]
+    authentication_classes=[JWTAuthentication]
     def delete(self, request):
         try:
             data = request.data

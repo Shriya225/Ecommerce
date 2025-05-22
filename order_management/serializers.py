@@ -18,11 +18,13 @@ class ProductOrderSerializer(serializers.ModelSerializer):
     # reverse Fk Serializer usage
 class OrderItemSerializer(serializers.ModelSerializer):
         payment_method = serializers.CharField(source="order.payment_method")  # Get from related order
+        status = serializers.CharField(source="order.status")  # Get from related order
+        size = serializers.CharField(source="size.name")  # Get from related order
         product=ProductOrderSerializer()
         total_price=serializers.SerializerMethodField()
         class Meta:
             model=OrderItem
-            fields=["id","created_at","product","quantity","unit_price","total_price","payment_method"]
+            fields=["id","created_at","product","quantity","unit_price","total_price","payment_method","status","size"]
         
         def get_total_price(self,obj):
             return obj.total_price()

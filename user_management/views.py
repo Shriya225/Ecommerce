@@ -8,6 +8,9 @@ from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework import status
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.response import Response
 # Create your views here.
 
 
@@ -66,6 +69,46 @@ class ProfileView(APIView):
             return Response({"msg":"Error deleteing User Profile.","error":str(e)},status=status.HTTP_400_BAD_REQUEST)
             
 
+class CustomTokenObtainPairView(TokenObtainPairView):
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        
+        if response.status_code == 200:
+            refresh_token = response.data.get('refresh')
+            # Set refresh token in httponly cookie
+            response.set_cookie(
+                key='refresh_token',
+                value=refresh_token,
+                httponly=True,
+                # secure=True,               # Use True in production (HTTPS)
+                samesite='Strict',         # or 'Lax' depending on your needs
+                max_age=7*24*60*60,        # e.g., 7 days (adjust as needed)
+                path='/',
+            )
+            # Optionally remove refresh token from response body if you want it only in cookie
+            del response.data['refresh']
 
+        return response
+
+class CustomTokenRefreshView(TokenRefreshView):
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        
+        if response.status_code == 200:
+            refresh_token = response.data.get('refresh')
+            if refresh_token:
+                response.set_cookie(
+                    key='refresh_token',
+                    value=refresh_token,
+                    httponly=True,
+                    # secure=True,
+                    samesite='Strict',
+                    max_age=7*24*60*60,
+                    path='/api/refresh/',
+                )
+            # Optionally remove refresh token from response body
+            # del response.data['refresh']
+
+        return response
 
 

@@ -30,7 +30,7 @@ class CartItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model=CartItem
-        fields=["cart_id","quantity","product","size","created_at"]
+        fields=["id","cart_id","quantity","product","size","created_at"]
 
 
 

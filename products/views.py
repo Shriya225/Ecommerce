@@ -11,6 +11,9 @@ class ProductView(ReadOnlyModelViewSet):
         print("paramssssssss",params,"is sort")
         sort=params.get("sort")
         cateogry=params.get("cateogry")
+        type=params.get("type")
+        search=params.get("search")
+
         if sort:
             if sort=="asc":
                 queryset=queryset.order_by("price")
@@ -21,8 +24,18 @@ class ProductView(ReadOnlyModelViewSet):
                 queryset=queryset.filter(cateogry__parent__name="Men")
             if cateogry=="Women":
                 queryset=queryset.filter(cateogry__parent__name="Women")
-            if cateogry=="Kids":
+            if cateogry=="kids"or cateogry=="Kids":
                 queryset=queryset.filter(cateogry__parent__name="Kids")
+        if type:
+            if type=="BottomWear":
+                queryset=queryset.filter(cateogry__name='BottomWear')
+            if type=="TopWear":
+                queryset=queryset.filter(cateogry__name='TopWear')
+            if type=="WinterWear":
+                queryset=queryset.filter(cateogry__name='WinterWear')
+        if search:
+            queryset=queryset.filter(name__icontains=search)
+
         return queryset
         
     
