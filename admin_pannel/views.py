@@ -8,29 +8,37 @@ from django.db import transaction
 import uuid
 from order_management.models import Order,OrderItem
 from .serializers import ListOrderSerializer
-
-# Create your views here.
+from rest_framework.permissions import IsAuthenticated,IsAdminUser
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.parsers import MultiPartParser, FormParser
 
 class AddProductView(APIView):
-    def post(self,request):
-        data=request.data
-        print(data)
-        serializer=ProductAddSerializer(data=data)
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    authentication_classes = [JWTAuthentication]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request):
+        serializer = ProductAddSerializer(data=request.data)
         if serializer.is_valid():
-            print("vlaidated")
             serializer.save()
+            return Response({"message": "Product added successfully!"}, status=201)
         else:
             print(serializer.errors)
-        return Response({"errors":serializer.errors,"data":serializer.data})
+            return Response({"errors": serializer.errors}, status=400)
+
 
 class ListProductView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    authentication_classes = [JWTAuthentication]
     def get(self,request):
         products=Product.objects.all()
-        serializer=ListProductSerializer(products)
+        serializer=ListProductSerializer(products,many=True)
         return Response(serializer.data)
     
 
 class DeleteProductView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    authentication_classes = [JWTAuthentication]
     def delete(self, request):
         product_id = request.data.get("id") 
 
@@ -60,6 +68,8 @@ class DeleteProductView(APIView):
 
 
 class ListOrderView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    authentication_classes = [JWTAuthentication]
     def get(self,request):
         orders=Order.objects.all()
         serializer=ListOrderSerializer(orders,many=True)    
@@ -67,6 +77,8 @@ class ListOrderView(APIView):
     
 
 class UpdateOrderStatusView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    authentication_classes = [JWTAuthentication]
     def patch(self, request):
             id = request.data.get("id")
             status_value = request.data.get("status")

@@ -1,7 +1,7 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
-from .serializers import RegisterSerializer,ProfileSerializer
+from .serializers import RegisterSerializer,ProfileSerializer,AdminTokenObtainPairSerializer
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.decorators import api_view
@@ -25,24 +25,26 @@ class RegisterUserView(APIView):
         except Exception as e:
             raise serializers.ValidationError({"msg":str(e)})
 
+
 @api_view(["POST"])
 def logout(request):
+    refresh_token = request.COOKIES.get('refresh_token')
+    if not refresh_token:
+        return Response({"msg": "No refresh token cookie found"}, status=status.HTTP_400_BAD_REQUEST)
     try:
-        refresh_token=request.data.get("refresh")
-        if not refresh_token:
-            return Response({"msg":"could not get token"})
-        token=RefreshToken(refresh_token)
+        token = RefreshToken(refresh_token)
         token.blacklist()
-        return Response({"msg":"succesfully logged out."})
     except Exception as e:
-        return Response({"msg":str(e)})
+        return Response({"msg": f"Error blacklisting token: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
     
+    response = Response({"msg": "Successfully logged out."}, status=status.HTTP_200_OK)
+    response.delete_cookie('refresh_token', path='/api/login/')
+    return response
 
 class ProfileView(APIView):
     permission_classes=[IsAuthenticated]
     authentication_classes=[JWTAuthentication]
 
-    #Display Profile details
     def get(self,request):
         print(request.user,type(request.user))
         try:
@@ -90,25 +92,54 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
         return response
 
-class CustomTokenRefreshView(TokenRefreshView):
+
+class CustomTokenRefreshView(APIView):
+    def post(self, request, *args, **kwargs):
+        refresh_token = request.COOKIES.get('refresh_token')
+
+        if refresh_token is None:
+            return Response({'detail': 'No refresh token in cookie'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            refresh = RefreshToken(refresh_token)
+            access_token = str(refresh.access_token)
+
+            response = Response({'access': access_token}, status=200)
+
+            # OPTIONAL: rotate refresh token & set new cookie
+            new_refresh = str(refresh)
+            response.set_cookie(
+                key='refresh_token',
+                value=new_refresh,
+                httponly=True,
+                # secure=True,  # enable in production
+                samesite='Strict',
+                max_age=7 * 24 * 60 * 60,
+                path='/api/refresh/',
+            )
+            return response
+
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class AdminTokenObtainPairView(TokenObtainPairView):
+    serializer_class = AdminTokenObtainPairSerializer
+
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
-        
+
         if response.status_code == 200:
             refresh_token = response.data.get('refresh')
-            if refresh_token:
-                response.set_cookie(
-                    key='refresh_token',
-                    value=refresh_token,
-                    httponly=True,
-                    # secure=True,
-                    samesite='Strict',
-                    max_age=7*24*60*60,
-                    path='/api/refresh/',
-                )
-            # Optionally remove refresh token from response body
-            # del response.data['refresh']
+            response.set_cookie(
+                key='refresh_token',
+                value=refresh_token,
+                httponly=True,
+                samesite='Strict',
+                max_age=7 * 24 * 60 * 60,  # 7 days
+                path='/',
+            )
+            del response.data['refresh']
 
         return response
-
-

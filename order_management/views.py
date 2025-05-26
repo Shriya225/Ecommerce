@@ -21,6 +21,8 @@ class AddOrderView(APIView):
 
         if not payment_method:
             return Response({"error": "Please enter payment_method"}, status=status.HTTP_400_BAD_REQUEST)
+        if not delivery_data:
+            return Response({"error": "Please enter deivery info"}, status=status.HTTP_400_BAD_REQUEST)
 
         cart_id = user.cart_id
         cart_items = CartItem.objects.filter(cart_id=cart_id)

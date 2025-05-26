@@ -11,23 +11,40 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
 class ProductAddSerializer(serializers.ModelSerializer):
     product_images = serializers.ListField(child=serializers.ImageField(), write_only=True)
-    cateogry=serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())
-    # Handle M2M field
+    category = serializers.CharField(write_only=True)
+    subcategory = serializers.CharField(write_only=True)
     size = serializers.SlugRelatedField(queryset=Size.objects.all(), slug_field="name", many=True)
     class Meta:
         model=Product
-        fields=["name","description","price","stock","bestSeller","size","cateogry","product_images"]
+        fields=["name","description","price","stock","bestSeller","size","category","subcategory","product_images"]
+    def validate(self, attrs):
+            category_name = attrs.pop("category")
+            subcategory_name = attrs.pop("subcategory")
 
-    def create(self, validated_data): 
+            try:
+                parent_category = Category.objects.get(name=category_name, parent=None)
+            except Category.DoesNotExist:
+                raise serializers.ValidationError({"category": f"Category '{category_name}' not found."})
+
+            try:
+                subcategory = Category.objects.get(name=subcategory_name, parent=parent_category)
+            except Category.DoesNotExist:
+                raise serializers.ValidationError({"subcategory": f"Subcategory '{subcategory_name}' not found under '{category_name}'."})
+
+            attrs["cateogry"] = subcategory  # final FK object
+            return attrs
+    def create(self, validated_data):
         images = validated_data.pop("product_images")
-        size_data = validated_data.pop("size", [])  # Extract size list (["S", "M", "L"])
-        product = Product.objects.create(**validated_data)  # Create Product
-        product.size.set(size_data)  # Assign ManyToMany sizes
+        size_data = validated_data.pop("size", [])
+        category = validated_data.pop("cateogry")  # resolved from validate
+
+        product = Product.objects.create(**validated_data, cateogry=category)
+        product.size.set(size_data)
         
-        # Create image instances
-        ProductImage.objects.bulk_create([
-            ProductImage(product=product, image_url=image) for image in images
-        ])
+        product_images = [
+        ProductImage(product=product, image_url=image, is_main=(i == 0))
+        for i, image in enumerate(images)]
+        ProductImage.objects.bulk_create(product_images)
         return product
 
 # # serilaizer for returning only parent name of cateogry.
@@ -48,7 +65,7 @@ class CateogryProductSerializer(serializers.ModelSerializer):
 # serializer to display all products in admin pannel
 class ListProductSerializer(serializers.ModelSerializer):
     main_img=serializers.SerializerMethodField()
-    cateogry= serializers.CharField(source="parent.name", allow_null=True)
+    cateogry= serializers.CharField(source="cateogry.parent.name", allow_null=True)
     class Meta:
         model=Product
         fields=["id","main_img","name","price","cateogry"]
@@ -62,15 +79,16 @@ class ListProductSerializer(serializers.ModelSerializer):
 class DeliveryInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model=DeliveryInfo
-        fields=["first_name","city","country","state","postal_code"]
+        fields=["first_name","city","country","state","postal_code","street"]
 
 # serializer to dispaly all orders
 class ListOrderSerializer(serializers.ModelSerializer):
     items=serializers.SerializerMethodField()
     delivery_info=DeliveryInfoSerializer()
+    user= serializers.CharField(source="user.username", allow_null=True)
     class Meta:
         model=Order
-        fields=["id","created_at","total_price","payment_method","status","delivery_info","items"]
+        fields=["id","created_at","total_price","payment_method","status","delivery_info","items","user"]
 
     def get_items(self,obj):
         items_data=obj.items.all()
