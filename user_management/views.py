@@ -11,7 +11,7 @@ from rest_framework import status
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
-
+import os
 class RegisterUserView(APIView):
     def post(self,request):
         try:
@@ -26,7 +26,7 @@ class RegisterUserView(APIView):
 
 @api_view(["POST"])
 def logout(request):
-    refresh_token = request.COOKIES.get('refresh_token')
+    refresh_token = request.COOKIES.get('refresh_token_user')
     if not refresh_token:
         return Response({"msg": "No refresh token cookie found"}, status=status.HTTP_400_BAD_REQUEST)
     try:
@@ -36,7 +36,24 @@ def logout(request):
         return Response({"msg": f"Error blacklisting token: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
     
     response = Response({"msg": "Successfully logged out."}, status=status.HTTP_200_OK)
-    response.delete_cookie('refresh_token', path='/api/login/')
+    response.delete_cookie('refresh_token_user', path='/')
+    return response
+
+
+@api_view(["POST"])
+def admin_logout(request):
+    refresh_token = request.COOKIES.get('refresh_token_admin')
+    if not refresh_token:
+        return Response({"msg": "No refresh token cookie found"}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        token = RefreshToken(refresh_token)
+        token.blacklist()
+    except Exception as e:
+        return Response({"msg": f"Error blacklisting token: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    response = Response({"msg": "Successfully logged out."}, status=status.HTTP_200_OK)
+    # Delete cookie with matching path (usually '/')
+    response.delete_cookie('refresh_token_admin', path='/')
     return response
 
 class ProfileView(APIView):
@@ -79,6 +96,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                 value=refresh_token,
                 httponly=True,
                 # secure=True,               # Use True in production (HTTPS)
+                secure=not os.getenv("DEBUG", "true").lower() == "true",
                 samesite='Strict',         # or 'Lax' depending on your needs
                 max_age=7*24*60*60,        # e.g., 7 days (adjust as needed)
                 path='/',
@@ -108,6 +126,7 @@ class CustomTokenRefreshView(APIView):
                 value=new_refresh,
                 httponly=True,
                 # secure=True,  # enable in production
+                secure=not os.getenv("DEBUG", "true").lower() == "true",
                 samesite='Strict',
                 max_age=7 * 24 * 60 * 60,
                 path='/api/refresh-user/',
@@ -131,6 +150,7 @@ class AdminTokenObtainPairView(TokenObtainPairView):
                 key='refresh_token_admin',
                 value=refresh_token,
                 httponly=True,
+                secure=not os.getenv("DEBUG", "true").lower() == "true",
                 samesite='Strict',
                 max_age=7 * 24 * 60 * 60,  # 7 days
                 path='/',
@@ -156,12 +176,13 @@ class AdminTokenRefreshView(APIView):
             # OPTIONAL: rotate refresh token and reset the cookie
             new_refresh = str(refresh)
             response.set_cookie(
-                key='refresh_token',
+                key='refresh_token_admin',
                 value=new_refresh,
                 httponly=True,
+                secure=not os.getenv("DEBUG", "true").lower() == "true",
                 samesite='Strict',
                 max_age=7 * 24 * 60 * 60,
-                path='/api/refresh-admin/',  # Scope refresh cookie tightly to admin path
+                path='/',  # Scope refresh cookie tightly to admin path
             )
 
             return response
