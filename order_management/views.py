@@ -74,7 +74,6 @@ class ListOrderView(APIView):
     def get(self,request):
         # use double fk lookup form ORM
         orders = OrderItem.objects.filter(order__user=request.user)  
-        print(orders)  # Debugging
         
         serializer = OrderItemSerializer(orders, many=True)  # Serialize the data
         return Response(serializer.data, status=status.HTTP_200_OK)

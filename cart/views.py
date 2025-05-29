@@ -13,9 +13,7 @@ class ViewCart(APIView):
     authentication_classes=[JWTAuthentication]
 
     def get(self,request):
-        print(request.user,request.user.cart_id)
         cart_items=CartItem.objects.filter(cart_id=request.user.cart_id)
-        print(cart_items)
         serializer=CartItemSerializer(cart_items,many=True)
         return Response({
                          "data":serializer.data,
@@ -27,7 +25,6 @@ class AddCart(APIView):
     authentication_classes=[JWTAuthentication]
 
     def post(self,request):
-        print(request.data,type(request.data))  
         serializer=AddToCartSerializer(data=request.data,context={"request": request})
         if serializer.is_valid():
             serializer.save()

@@ -72,7 +72,6 @@ class ListProductSerializer(serializers.ModelSerializer):
 
 
     def get_main_img(self,obj):
-        print(obj)
         main_img=obj.product_images.filter(is_main=True).first()
         return main_img.image_url.url if main_img else None
     
@@ -92,5 +91,4 @@ class ListOrderSerializer(serializers.ModelSerializer):
 
     def get_items(self,obj):
         items_data=obj.items.all()
-        print(items_data)
         return  [str(item) for item in items_data]  # Calls __str__ method of Product model

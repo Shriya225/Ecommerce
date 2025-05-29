@@ -8,7 +8,6 @@ class ProductView(ReadOnlyModelViewSet):
         queryset=Product.objects.prefetch_related("product_images").all()
         request=self.request
         params=request.query_params
-        print("paramssssssss",params,"is sort")
         sort=params.get("sort")
         cateogry=params.get("cateogry")
         type=params.get("type")
@@ -53,7 +52,7 @@ class HomeView(ReadOnlyModelViewSet):
         return ProductDetailSerializer
 
     def list(self, request, *args, **kwargs):
-        latest_products = Product.objects.order_by('-created_at')[:8]
+        latest_products = Product.objects.order_by('-updated_at')[:8]
         best_sellers = Product.objects.filter(bestSeller=True)[:4]
 
         latest_products_data=ProductCollectionSerializer(latest_products,many=True).data

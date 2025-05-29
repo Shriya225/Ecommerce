@@ -23,7 +23,6 @@ class AddProductView(APIView):
             serializer.save()
             return Response({"message": "Product added successfully!"}, status=201)
         else:
-            print(serializer.errors)
             return Response({"errors": serializer.errors}, status=400)
 
 

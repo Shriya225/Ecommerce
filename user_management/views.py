@@ -8,11 +8,9 @@ from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework import status
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
-# Create your views here.
-
 
 class RegisterUserView(APIView):
     def post(self,request):
@@ -46,10 +44,8 @@ class ProfileView(APIView):
     authentication_classes=[JWTAuthentication]
 
     def get(self,request):
-        print(request.user,type(request.user))
         try:
             user=request.user
-            print(user,type(user))
             serializer=ProfileSerializer(user)
             return Response(serializer.data)
         except Exception as e:
@@ -79,7 +75,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             refresh_token = response.data.get('refresh')
             # Set refresh token in httponly cookie
             response.set_cookie(
-                key='refresh_token',
+                key='refresh_token_user',
                 value=refresh_token,
                 httponly=True,
                 # secure=True,               # Use True in production (HTTPS)
@@ -87,7 +83,6 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                 max_age=7*24*60*60,        # e.g., 7 days (adjust as needed)
                 path='/',
             )
-            # Optionally remove refresh token from response body if you want it only in cookie
             del response.data['refresh']
 
         return response
@@ -95,7 +90,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
 class CustomTokenRefreshView(APIView):
     def post(self, request, *args, **kwargs):
-        refresh_token = request.COOKIES.get('refresh_token')
+        refresh_token = request.COOKIES.get('refresh_token_user')
 
         if refresh_token is None:
             return Response({'detail': 'No refresh token in cookie'}, status=status.HTTP_400_BAD_REQUEST)
@@ -109,13 +104,13 @@ class CustomTokenRefreshView(APIView):
             # OPTIONAL: rotate refresh token & set new cookie
             new_refresh = str(refresh)
             response.set_cookie(
-                key='refresh_token',
+                key='refresh_token_user',
                 value=new_refresh,
                 httponly=True,
                 # secure=True,  # enable in production
                 samesite='Strict',
                 max_age=7 * 24 * 60 * 60,
-                path='/api/refresh/',
+                path='/api/refresh-user/',
             )
             return response
 
@@ -133,7 +128,7 @@ class AdminTokenObtainPairView(TokenObtainPairView):
         if response.status_code == 200:
             refresh_token = response.data.get('refresh')
             response.set_cookie(
-                key='refresh_token',
+                key='refresh_token_admin',
                 value=refresh_token,
                 httponly=True,
                 samesite='Strict',
@@ -143,3 +138,33 @@ class AdminTokenObtainPairView(TokenObtainPairView):
             del response.data['refresh']
 
         return response
+
+
+class AdminTokenRefreshView(APIView):
+    def post(self, request, *args, **kwargs):
+        refresh_token = request.COOKIES.get('refresh_token_admin') 
+
+        if refresh_token is None:
+            return Response({'detail': 'No refresh token in cookie'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            refresh = RefreshToken(refresh_token)
+            access_token = str(refresh.access_token)
+
+            response = Response({'access': access_token}, status=200)
+
+            # OPTIONAL: rotate refresh token and reset the cookie
+            new_refresh = str(refresh)
+            response.set_cookie(
+                key='refresh_token',
+                value=new_refresh,
+                httponly=True,
+                samesite='Strict',
+                max_age=7 * 24 * 60 * 60,
+                path='/api/refresh-admin/',  # Scope refresh cookie tightly to admin path
+            )
+
+            return response
+
+        except Exception as e:
+            return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)

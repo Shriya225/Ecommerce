@@ -11,7 +11,6 @@ class ProductCollectionSerializer(serializers.ModelSerializer):
     # obj represents product instance.
 
     def get_main_image(self,obj):
-        print(obj)
         main_img=obj.product_images.filter(is_main=True).first()
         return main_img.image_url.url if main_img else None
 

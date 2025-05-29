@@ -14,7 +14,6 @@ class CartProductSerializer(serializers.ModelSerializer):
         fields=["name","price","main_img"]
     
     def get_main_img(self,obj):
-        print(obj)
         main_img=obj.product_images.filter(is_main=True).first()
         return main_img.image_url.url if main_img else None
     
@@ -53,7 +52,6 @@ class AddToCartSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context["request"].user  # Get user from request
         validated_data["cart_id"] = user.cart_id
-        print(user.cart_id)  # Assign cart_id automatically
 
         # to avoid duplicates of cart items.
         existing_obj=CartItem.objects.filter(cart_id= user.cart_id,product=validated_data["product"],size=validated_data["size"]).first()
@@ -67,8 +65,6 @@ class AddToCartSerializer(serializers.ModelSerializer):
         return CartItem.objects.create(**validated_data)
     
     def update(self, instance, validated_data):
-        print(instance,type(instance),instance.quantity)
-        print(validated_data,type(validated_data))
         updated_quantity=validated_data.get("quantity")
         if not updated_quantity:
             raise serializers.ValidationError("Quantity field is empty..")
