@@ -54,7 +54,7 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
 
 INSTALLED_APPS = [
     'django.contrib.staticfiles', 
-    # this should be first in line,if order is changed it iwll lead to bugs
+    # this should be first in line,if order is changed it will lead to bugs
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
