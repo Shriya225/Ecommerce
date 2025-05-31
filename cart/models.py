@@ -6,7 +6,7 @@ from uuid import UUID
 
 
 class Cart(UUIDModel):
-    user=models.OneToOneField(User, on_delete=models.CASCADE,related_name="cart_id")
+    user=models.OneToOneField(User, on_delete=models.CASCADE,related_name="cart_id",unique=True)
 
     def __str__(self):
         return f"Cart of {self.user.username}"

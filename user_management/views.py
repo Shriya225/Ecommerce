@@ -12,6 +12,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 import os
+
 class RegisterUserView(APIView):
     def post(self,request):
         try:
@@ -95,10 +96,9 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                 key='refresh_token_user',
                 value=refresh_token,
                 httponly=True,
-                # secure=True,               # Use True in production (HTTPS)
-                secure=not os.getenv("DEBUG", "true").lower() == "true",
-                samesite='Strict',         # or 'Lax' depending on your needs
-                max_age=7*24*60*60,        # e.g., 7 days (adjust as needed)
+                secure=True,               # Use True in production (HTTPS)
+                samesite='None',      
+                max_age=7*24*60*60,     
                 path='/',
             )
             del response.data['refresh']
@@ -125,11 +125,10 @@ class CustomTokenRefreshView(APIView):
                 key='refresh_token_user',
                 value=new_refresh,
                 httponly=True,
-                # secure=True,  # enable in production
-                secure=not os.getenv("DEBUG", "true").lower() == "true",
-                samesite='Strict',
+                secure=True,  # enable in production
+                samesite='None',
                 max_age=7 * 24 * 60 * 60,
-                path='/api/refresh-user/',
+                path='/',
             )
             return response
 
@@ -150,8 +149,8 @@ class AdminTokenObtainPairView(TokenObtainPairView):
                 key='refresh_token_admin',
                 value=refresh_token,
                 httponly=True,
-                secure=not os.getenv("DEBUG", "true").lower() == "true",
-                samesite='Strict',
+                secure=True,
+                samesite='None',
                 max_age=7 * 24 * 60 * 60,  # 7 days
                 path='/',
             )
@@ -179,8 +178,8 @@ class AdminTokenRefreshView(APIView):
                 key='refresh_token_admin',
                 value=new_refresh,
                 httponly=True,
-                secure=not os.getenv("DEBUG", "true").lower() == "true",
-                samesite='Strict',
+                secure=True,
+                samesite='None',
                 max_age=7 * 24 * 60 * 60,
                 path='/',  # Scope refresh cookie tightly to admin path
             )

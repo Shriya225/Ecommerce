@@ -5,7 +5,7 @@ from rest_framework.response import Response
 
 class ProductView(ReadOnlyModelViewSet):
     def get_queryset(self):
-        queryset=Product.objects.prefetch_related("product_images").all()
+        queryset=Product.objects.prefetch_related("product_images").all().order_by('id')  
         request=self.request
         params=request.query_params
         sort=params.get("sort")

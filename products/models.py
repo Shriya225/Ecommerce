@@ -1,6 +1,6 @@
 from django.db import models
 import uuid
-
+from cloudinary_storage.storage import MediaCloudinaryStorage
 class UUIDModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)  # Set on creation
@@ -20,7 +20,7 @@ class Category(UUIDModel):
 
 
 class Size(UUIDModel):
-    name = models.CharField(max_length=1)
+    name = models.CharField(max_length=5)
 
     def __str__(self):
         return self.name
@@ -42,7 +42,7 @@ class Product(UUIDModel):
 
 class ProductImage(UUIDModel):
     product=models.ForeignKey(Product,on_delete=models.CASCADE, related_name="product_images")
-    image_url = models.ImageField(upload_to="product_images/")
+    image_url = models.ImageField(upload_to="product_images/", storage=MediaCloudinaryStorage() )
     is_main=models.BooleanField(default=False)
 
     def __str__(self):

@@ -9,33 +9,45 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-import dj_database_url
+
 from pathlib import Path
 from datetime import timedelta
 import os
 import environ
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
 env = environ.Env(
-    DEBUG=(bool, False)
+    DEBUG=(bool, False),
+    SECRET_KEY=(str, ''),
+    ALLOWED_HOSTS=(list, []),
+    DB_ENGINE=(str, 'django.db.backends.sqlite3'),
+    DB_NAME=(str, ''),
+    DB_USER=(str, ''),
+    DB_PASSWORD=(str, ''),
+    DB_HOST=(str, ''),
+    DB_PORT=(str, ''),
+    CLOUDINARY_CLOUD_NAME=(str, ''),
+    CLOUDINARY_API_KEY=(str, ''),
+    CLOUDINARY_API_SECRET=(str, ''),
+    CLOUDINARY_SECURE=(bool, True),
 )
-
-# Read from .env file
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
-
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 DEBUG = env('DEBUG')
+SECRET_KEY = env('SECRET_KEY')
 
-
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-c!rm8+%c7i-pc#3-a9$33qg#w+t#@m!*=i09_*e3ye2_!o0lnh'
+
+# SECRET_KEY = 'django-insecure-c!rm8+%c7i-pc#3-a9$33qg#w+t#@m!*=i09_*e3ye2_!o0lnh'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
-ALLOWED_HOSTS = []
+
+
 
 
 # Application definition
@@ -46,6 +58,8 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'cloudinary',
+    'cloudinary_storage',
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
@@ -56,18 +70,21 @@ INSTALLED_APPS = [
     'order_management',
     'admin_pannel',
     'corsheaders',
+    
 ]
 
 MIDDLEWARE = [
+        'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+         "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-        'corsheaders.middleware.CorsMiddleware',
 ]
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 CORS_ALLOW_ALL_ORIGINS = True
 ROOT_URLCONF = 'ecommerce.urls'
 
@@ -93,13 +110,16 @@ WSGI_APPLICATION = 'ecommerce.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-
 DATABASES = {
-    'default': dj_database_url.config(
-        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}'
-    )
+    'default': {
+        'ENGINE': env('DB_ENGINE'),
+        'NAME': env('DB_NAME'),
+        'USER': env('DB_USER'),
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': env('DB_HOST'),
+        'PORT': env('DB_PORT'),
+    }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -134,7 +154,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
-
+MEDIA_URL = '/media/'  # This is needed for URL generation
 STATIC_URL = 'static/'
 
 # Default primary key field type
@@ -143,11 +163,11 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-STATIC_URL = 'static/'
-STATICFILES_DIRS=[os.path.join(BASE_DIR,'static')]
+# STATIC_URL = 'static/'
+# STATICFILES_DIRS=[os.path.join(BASE_DIR,'static')]
+# Replace with:
 
-MEDIA_URL='/media/'
-MEDIA_ROOT=os.path.join(BASE_DIR,'media')
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -166,3 +186,20 @@ CORS_ALLOW_CREDENTIALS = True
 # CORS_ALLOWED_ORIGINS = [
 #     "http://localhost:5173",  # Your React frontend origin
 # ]
+
+
+
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': env('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': env('CLOUDINARY_API_KEY'),
+    'API_SECRET': env('CLOUDINARY_API_SECRET'),
+    'SECURE': env.bool('CLOUDINARY_SECURE', default=True), 
+    'STATICFILES_MANIFEST_ROOT': os.path.join(BASE_DIR, 'manifest'),
+    # Production optimizations
+    # 'EXCLUDE_DELETE_ORPHANED_MEDIA': True,
+    # 'INVALID_VIDEO_ERROR': True,
+}
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+CSRF_COOKIE_SECURE = True 
