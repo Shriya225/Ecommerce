@@ -53,6 +53,8 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
 # Application definition
 
 INSTALLED_APPS = [
+    'django.contrib.staticfiles', 
+    # this should be first in line,if order is changed it iwll lead to bugs
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -60,7 +62,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'cloudinary',
     'cloudinary_storage',
-    'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
@@ -155,18 +156,18 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 MEDIA_URL = '/media/'  # This is needed for URL generation
-STATIC_URL = 'static/'
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# STATIC_URL = 'static/'
-# STATICFILES_DIRS=[os.path.join(BASE_DIR,'static')]
 # Replace with:
-
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 
 REST_FRAMEWORK = {
